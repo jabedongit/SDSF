@@ -1,0 +1,31 @@
+{
+    "dataSharingPolicy": {
+        "id": "0f866db200480",
+        "author": "Jabed",
+        "priority": 2,
+        "decision": "permit",
+        "dataConsumer": {
+            "attributeName": "email",
+            "attributeValue": "bob@email.com"
+        },
+        "contextCondition": [
+            {
+                "function": "equal-to",
+                "category": "dataConsumer",
+                "attributeName": "role",
+                "AttributeValue": "internalUsers"
+            }
+        ],
+        "privacyObligation": {
+            "purpose": "null",
+            "granularity": "null",
+            "notification": "null",
+            "accounting": "null"
+        },
+        "reSharingCondition": {
+            "canShare": "false",
+            "cardinality": "0",
+            "recurring": "0"
+        }
+    }
+}
