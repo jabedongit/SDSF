@@ -1,0 +1,49 @@
+{
+    "dataSharingPolicy": {
+        "id": "6dc4b95610f0d",
+        "author": "alice@gmail.com",
+        "priority": 1,
+        "decision": "permit",
+        "dataConsumer": {
+            "attributeName": "email",
+            "attributeValue": "smith@xyz.com"
+        },
+        "contextCondition": [
+            {
+                "function": "greater-than-equal",
+                "category": "environment",
+                "attributeName": "startDate",
+                "AttributeValue": "22-Jun-2017"
+            },
+            {
+                "operation": "AND"
+            },
+            {
+                "function": "less-than-equal",
+                "category": "environment",
+                "attributeName": "endtDate",
+                "AttributeValue": "23-Jun-2017"
+            },
+            {
+                "operation": "and"
+            },
+            {
+                "function": "equal",
+                "category": "dataConsumer",
+                "attributeName": "location",
+                "AttributeValue": "melbourne"
+            }
+        ],
+        "privacyObligation": {
+            "purpose": "interview",
+            "granularity": "level1",
+            "notification": "alice@gmail.com",
+            "accounting": "true"
+        },
+        "reSharingCondition": {
+            "canShare": "true",
+            "cardinality": "1",
+            "recurring": "1"
+        }
+    }
+}

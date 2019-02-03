@@ -1,0 +1,41 @@
+{
+    "dataSharingPolicy": {
+        "id": "f1b6814440e28",
+        "author": "alice@gmail.com",
+        "priority": 1,
+        "decision": "permit",
+        "dataConsumer": {
+            "attributeName": "",
+            "attributeValue": ""
+        },
+        "contextCondition": [
+            {
+                "function": "greater-than-equal",
+                "category": "environment",
+                "attributeName": "startDate",
+                "AttributeValue": ""
+            },
+            {
+                "operation": "AND"
+            },
+            {
+                "function": "less-than-equal",
+                "category": "environment",
+                "attributeName": "endtDate",
+                "AttributeValue": ""
+            }
+        ],
+        "privacyObligation": {
+            "purpose": "hh",
+            "granularity": "null",
+            "anonymization": "true",
+            "accounting": "true"
+        },
+        "reSharingCondition": {
+            "canShare": "true",
+            "cardinality": "",
+            "recurring": "",
+            "reSharingPolicyId": "9882e75928be3"
+        }
+    }
+}

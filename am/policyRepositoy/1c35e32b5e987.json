@@ -1,0 +1,40 @@
+{
+    "dataSharingPolicy": {
+        "id": "1c35e32b5e987",
+        "author": "alice",
+        "priority": 1,
+        "decision": "permit",
+        "dataConsumer": {
+            "attributeName": "email",
+            "attributeValue": "smith@xyz.com"
+        },
+        "contextCondition": [
+            {
+                "function": "greater-than-equal",
+                "category": "environment",
+                "attributeName": "startDate",
+                "AttributeValue": "1-Mar-2017"
+            },
+            {
+                "operation": "AND"
+            },
+            {
+                "function": "less-than-equal",
+                "category": "environment",
+                "attributeName": "endtDate",
+                "AttributeValue": "26-May-2017"
+            }
+        ],
+        "privacyObligation": {
+            "purpose": "interview",
+            "granularity": "level2",
+            "anonymization": "true",
+            "notification": "alice@gmail.com"
+        },
+        "reSharingCondition": {
+            "canShare": "true",
+            "cardinality": "1",
+            "recurring": "1"
+        }
+    }
+}
