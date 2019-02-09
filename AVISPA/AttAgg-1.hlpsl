@@ -1,0 +1,340 @@
+role user (
+  U,HyIDP,SP,OpenIDP,APP,AS : agent,
+  KU,KSP,KHyIDP,SAMLKHyIDP,KOpenIDP,SAMLKSP,KAPP,KAS : public_key,
+  SSP,RSP,SHyIDP,RHyIDP,SAPP,RAPP,RAS,SAS,SOpenIDP,ROpenIDP : channel(dy),
+  Resource1,Resource2,Resource3,Resource4,Resource5,Resource6,Resource7,PROFILE1,PROFILE2,SAMLAssrtn,AuthnReq,
+  SAMLResp,OpenIDReq,OpenIDResp,AuthZReq,AuthZGrant,SuccessfulAuthN : message) 
+played_by U def=
+  local
+   State, N1,N2,N3,N5,N6,N7,N10,N11,N12  : nat,
+   ID1,ID2,ID3,URI,UName1,Pass1,UName2,Pass2,LogInURI1,LogInURI2,ReleaseAttributes,AttributeAggregationURI : text,
+   AA,A : text set
+   
+   const u_hyidp_n1,u_hyidp_secret_n1,u_hyidp_resource1,u_openidp_n3,u_hyidp_n5,u_as_n6,
+   u_openidp_secret_uname1,u_openidp_secret_pass1,u_openidp_uname1,u_openidp_pass1,u_as_uname2,
+   u_as_pass2,u_as_authzgrant,u_as_n7,hyidp_u_resource1,u_openidp_resource2,u_as_resource4,
+   u_as_resource5,u_hyidp_resource6,u_hyidp_n10,u_hyidp_secret_resource3,u_hyidp_secret_resource1,
+   u_openidp_secret_resource2,u_as_secret_resource4,u_as_secret_resource5,u_hyidp_secret_resource6,
+   u_sp_secret_resource7,hyidp_u_resource3 : protocol_id
+        
+  init
+   State := 0
+
+  transition
+                
+  1. State=0 /\ RSP(start) =|> State':=2 /\ URI':=new() /\ SSP({KU.U.SP.URI'}_KSP)
+  
+  2. State=2 /\ RSP({SP.U.HyIDP.{AuthnReq(ID1.SP).URI}_inv(SAMLKSP)}_KU) =|> State':=4 /\ SHyIDP({U.HyIDP.{AuthnReq(ID1.SP).URI}_inv(SAMLKSP)}_KHyIDP)
+  
+  3. State=4 /\ RHyIDP({HyIDP.U.{Resource1(AttributeAggregationURI).N1}_inv(KHyIDP)}_KU) =|> State':=6 /\ SHyIDP({U.HyIDP.OpenIDP.N1}_KHyIDP) /\ secret(N1,u_hyidp_secret_n1,{U,HyIDP}) /\ request(U,HyIDP,u_hyidp_n1,N1) /\ request(U,HyIDP,u_hyidp_resource1,Resource1) /\ secret(Resource1,u_hyidp_secret_resource1,{U,HyIDP})
+  
+  4. State=6 /\ RHyIDP({HyIDP.U.OpenIDP.{OpenIDReq(ID2.OpenIDP.HyIDP.N2)}_inv(KHyIDP).KHyIDP}_KU) =|> State':=8 /\ SOpenIDP({U.OpenIDP.{OpenIDReq(ID2.OpenIDP.HyIDP.N2)}_inv(KHyIDP).KHyIDP}_KOpenIDP)
+  
+  5. State=8 /\ ROpenIDP({OpenIDP.U.{Resource2(LogInURI1).N3}_inv(KOpenIDP)}_KU) =|> State':=10 /\ SOpenIDP({U.OpenIDP.{UName1.Pass1}_inv(KU).N3}_KOpenIDP) /\ witness(U,OpenIDP,u_openidp_uname1,UName1) /\ witness(U,OpenIDP,u_openidp_pass1,Pass1) /\ request(U,OpenIDP,u_openidp_resource2,Resource2) /\ request(U,OpenIDP,u_openidp_n3,N3) /\ secret(Resource2,u_openidp_secret_resource2,{U,OpenIDP})
+  
+  6. State=10 /\ SOpenIDP({OpenIDP.U.HyIDP.{{OpenIDResp(ID2.OpenIDP.HyIDP.PROFILE1(OpenIDP,UName1)).N2}_inv(KOpenIDP)}_KHyIDP}_KU) =|> State':=12 /\ RHyIDP({U.HyIDP.{{OpenIDResp(ID2.OpenIDP.HyIDP.PROFILE1(OpenIDP,UName1)).N2}_inv(KOpenIDP)}_KHyIDP}_KHyIDP)
+  
+  7. State=12 /\ RHyIDP({HyIDP.U.{Resource3(AttributeAggregationURI.PROFILE1(OpenIDP,UName1)).N5}_inv(KHyIDP)}_KU) =|> State':=14 /\ SHyIDP({U.HyIDP.APP.N5}_KHyIDP) /\ request(U,HyIDP,u_hyidp_n5,N5) /\ request(U,HyIDP,hyidp_u_resource3,Resource3) /\ secret(Resource3,u_hyidp_secret_resource3,{U,HyIDP})
+  
+  8. State=14 /\ RAS({AS.U.{Resource4(LogInURI2).N6}_inv(KAS).ID3}_KU) =|> State':=16 /\ SAS({U.AS.{UName2.Pass2}_inv(KU).N6.ID3}_KAS) /\ request(U,AS,u_as_n6,N6) /\ witness(U,AS,u_as_uname2,UName2) /\ witness(U,AS,u_as_pass2,Pass2) /\ request(U,AS,u_as_resource4,Resource4) /\ secret(Resource4,u_as_secret_resource4,{U,AS})
+  
+  9. State=16 /\ RAS({U.AS.{Resource5(SuccessfulAuthN)}_inv(KAS).ID3.N6}_KU) =|> State':=18 /\ N7':=new() /\ SAPP({U.APP.AS.{{AuthZGrant(HyIDP.AS.UName2.A.N7)}_inv(KU)}_KAS.ID3}_KAPP)/\ witness(U,AS,u_as_authzgrant,AuthZGrant) /\ witness(U,AS,u_as_n7,N7') /\ request(U,AS,u_as_resource5,Resource5) /\ secret(Resource5,u_as_secret_resource5,{U,AS})
+  
+  10. State=18 /\ RHyIDP({HyIDP.U.{Resource6(AttributeAggregationURI.PROFILE1(OpenIDP,UName1).PROFILE2(APP,A).N10)}_inv(KHyIDP)}_KU) =|> State':=20 /\ SHyIDP({U.HyIDP.ReleaseAttributes.N10}_KHyIDP) /\ request(U,HyIDP,u_hyidp_resource6,Resource6) /\ request(U,HyIDP,u_hyidp_n10,N10) /\ secret(Resource6,u_hyidp_secret_resource6,{U,HyIDP})
+  
+  11. State=20 /\ RHyIDP({HyIDP.U.SP.{SAMLResp(ID1.HyIDP.SP.URI.SAMLAssrtn(PROFILE1(UName1),PROFILE2(UName2)).N11)}_inv(SAMLKHyIDP)}_KU) =|> State':=22 /\ SSP({U.SP.{SAMLResp(ID1.HyIDP.SP.URI.SAMLAssrtn(PROFILE1(UName1),PROFILE2(UName2)).N11)}_inv(SAMLKHyIDP)}_KSP)
+  
+  11. State=22 /\ RSP({{Resource7(URI).N12}_inv(KSP)}_KU) =|> State':=24 /\ request(U,SP,u_sp_resource7,Resource7) /\ request(U,SP,u_sp_n12,N12) /\ secret(Resource7,u_sp_secret_resource7,{U,SP}) 
+end role
+
+role serviceProvider (
+  U,HyIDP,SP : agent,
+  KU,KHyIDP,KSP : public_key,
+  SAMLKSP,SAMLKHyIDP : public_key,
+  SU,RU : channel(dy),
+  Resource7,PROFILE1,PROFILE2,SAMLAssrtn,AuthnReq,SAMLResp : message)
+played_by SP def=
+  local
+    State,N1,N11,N12 : nat,
+    ID1,UName1,UName2 : text,
+    URI : text
+    const sp_hyidp_samlresponse,sp_hyidp_n11,u_sp_resource7,u_sp_n12 : protocol_id
+
+  init
+    State:=1
+        
+  transition
+  
+  1. State=1 /\ RU({KU.U.SP.URI}_KSP) =|>  State':=3 /\ ID1':=new() /\ SU({SP.U.HyIDP.{AuthnReq(ID1'.SP).URI}_inv(SAMLKSP)}_KU)
+  
+  2. State=3 /\ RU({U.SP.{SAMLResp(ID1.HyIDP.SP.URI.SAMLAssrtn(PROFILE1(UName1),PROFILE2(UName2)).N11)}_inv(SAMLKHyIDP)}_KSP) =|> State':=5 /\ N12':=new() /\ SU({{Resource7(URI).N12'}_inv(KSP)}_KU) /\ request(SP,HyIDP,sp_hyidp_n11,N11) /\ request(SP,HyIDP,sp_hyidp_samlresponse,SAMLResp) /\ witness(SP,U,u_sp_resource7,Resource7) /\ witness(SP,U,u_sp_n12,N12')
+end role
+
+role hybridIdentityProvider (
+  U,HyIDP,SP,OpenIDP,APP,AS,RS : agent,
+  KU,KHyIDP,KOpenIDP,KAPP,KAS,KRS : public_key,
+  SAMLKSP,SAMLKHyIDP : public_key,
+  SU,RU,SOpenIDP,ROpenIDP,SAPP,RAPP : channel(dy),
+  AuthnReq,SAMLResp,Resource1,Resource3,Resource6,PROFILE1,PROFILE2,SAMLAssrtn,AuthZReq,AuthZResp,OpenIDReq,OpenIDResp: message)
+played_by HyIDP def=
+        
+  local
+    ID1,ID2,ID3,UName1,Pass1,UName2,Pass2,AttributeAggregationURI,ReleaseAttributes : text,
+    URI,LogInURI : text,
+    State,N1,N2,N5,N10,N4,N9,N11 : nat,
+    CheckAuthnResponse :bool,
+    A : text set
+    
+    const u_hyidp_n1,u_hyidp_resource1,hyidp_openidp_n2,hyidp_openidp_profile1,hyidp_openidp_secret_profile1,
+    hyidp_openidp_n4,hyidp_openidp_checkauthnresponse,hyidp_u_resource1,u_hyidp_n5,hyidp_rs_profile2, hyidp_rs_n10,hyidp_rs_secret_profile2,sp_hyidp_samlresponse,hyidp_openidp_secret_checkauthnresponse,
+    sp_hyidp_n11,u_hyidp_n10,u_hyidp_resource6,hyidp_app_authzresp,hyidp_u_resource3 : protocol_id
+                  
+  init 
+    State:=7
+        
+  transition
+
+  1. State=7 /\ RU({U.HyIDP.{AuthnReq(ID1.SP).URI}_inv(SAMLKSP)}_KHyIDP) =|> State':=9 /\ N1' := new() /\ SU({HyIDP.U.{Resource1(AttributeAggregationURI).N1'}_inv(KHyIDP)}_KU) /\ witness(HyIDP,U,u_hyidp_n1,N1) /\ witness(HyIDP,U,u_hyidp_resource1,Resource1)
+  
+  2. State=9 /\ RU({U.HyIDP.OpenIDP.N1}_KHyIDP) =|> State':=11 /\ N2' := new() /\ ID2' := new() /\ SU({HyIDP.U.OpenIDP.{OpenIDReq(ID2'.OpenIDP.HyIDP.N2')}_inv(KHyIDP).KHyIDP}_KU) /\ witness(HyIDP,OpenIDP,hyidp_openidp_n2,N2')
+  
+  3. State=11 /\ RU({U.HyIDP.{{OpenIDResp(ID2.OpenIDP.HyIDP.PROFILE1(OpenIDP,UName1)).N2}_inv(KOpenIDP)}_KHyIDP}_KHyIDP) =|> State':=13 /\ SOpenIDP({HyIDP.OpenIDP.{OpenIDResp(ID2.OpenIDP.HyIDP.PROFILE1(OpenIDP,UName1)).N2}_inv(KOpenIDP)}_KOpenIDP) /\ request(HyIDP,OpenIDP,hyidp_openidp_profile1,PROFILE1) /\ secret(PROFILE1,hyidp_openidp_secret_profile1,{HyIDP,OpenIDP})
+  
+  4. State=13 /\ ROpenIDP({OpenIDP.HyIDP.{CheckAuthnResponse.N4}_inv(KOpenIDP)}_KHyIDP) =|> State':=15 /\ N5' := new() /\ SU({HyIDP.U.{Resource3(AttributeAggregationURI.PROFILE1(OpenIDP,UName1)).N5}_inv(KHyIDP)}_KU) /\ request(HyIDP,OpenIDP,hyidp_openidp_n4,N4) /\ request(HyIDP,OpenIDP,hyidp_openidp_checkauthnresponse,CheckAuthnResponse) /\ witness(HyIDP,U,u_hyidp_n5,N5')/\ witness(HyIDP,U,hyidp_u_resource3,Resource3) /\ secret(CheckAuthnResponse,hyidp_openidp_secret_checkauthnresponse,{HyIDP,OpenIDP})
+  
+  5. State=15 /\ RU({U.HyIDP.APP.N5}_KHyIDP) =|> State':=17 /\ ID3' := new() /\ SAPP({HyIDP.APP.AS.RS.{AuthZReq(ID3.HyIDP.AS.RS.A)}_inv(KHyIDP).KHyIDP}_KAPP)
+  
+  6. State=17 /\ RAPP({APP.HyIDP.{AuthZResp({HyIDP.{PROFILE2(APP,A).N9}_inv(KRS).ID3}_KHyIDP)}_inv(KAPP)}_KHyIDP) =|> State':=19 /\ N10' := new()/\ SU({HyIDP.U.{Resource6(AttributeAggregationURI.PROFILE1(OpenIDP,UName1).PROFILE2(APP,A).N10')}_inv(KHyIDP)}_KU) /\ request(HyIDP,APP,hyidp_app_authzresp,AuthZResp) /\ request(HyIDP,RS,hyidp_rs_profile2,PROFILE2) /\ witness(HyIDP,U,u_hyidp_n10,N10') /\ secret(PROFILE2,hyidp_rs_secret_profile2,{HyIDP,RS}) /\ witness(HyIDP,U,u_hyidp_resource6,Resource6)
+  
+  7. State=19 /\ RU({U.HyIDP.ReleaseAttributes.N10}_KHyIDP) =|> State':=21 /\ N11' := new() /\ SU({HyIDP.U.SP.{SAMLResp(ID1.HyIDP.SP.URI.SAMLAssrtn(PROFILE1(UName1),PROFILE2(UName2)).N11')}_inv(SAMLKHyIDP)}_KU) /\ witness(HyIDP,SP,sp_hyidp_samlresponse,SAMLResp) /\ witness(HyIDP,SP,sp_hyidp_n11,N11')
+end role
+
+role application (
+  U,HyIDP,AS,APP,RS : agent,
+  KU,KHyIDP,KAS,KAPP,KRS : public_key,
+  SU,RU,SHyIDP,RHyIDP,SAS,RAS,SRS,RRS	: channel(dy),
+  AccessToken,AuthZGrant,PROFILE2,AuthZReq,AuthZResp : message)
+played_by APP def=        
+  local
+    State,N7,N8,N10,N9 : nat,
+    ID3,UName2,Pass2 : text,
+    A : text set
+    
+    const hyidp_app_authzresp : protocol_id
+                        
+  init
+    State:=23
+        
+  transition
+
+  1. State=23 /\ RHyIDP({HyIDP.APP.AS.RS.{AuthZReq(ID3.HyIDP.AS.RS.A)}_inv(KHyIDP).KHyIDP}_KAPP) =|> State':=25 /\ SAS({APP.AS.{AuthZReq(ID3.HyIDP.AS.RS.A)}_inv(KHyIDP).KHyIDP}_KAS)
+  
+  2. State=25 /\ RU({U.APP.AS.{{AuthZGrant(HyIDP.AS.UName2.A.N7)}_inv(KU)}_KAS.ID3}_KAPP) =|> State':=27 /\ SAS({APP.AS.{{AuthZGrant(HyIDP.AS.UName2.A.N7)}_inv(KU)}_KAS.ID3}_KAS)
+
+  3. State=27 /\ RAS({AS.APP.RS.{{AccessToken(AS.HyIDP.RS.UName2.A.N8)}_inv(KAS).ID3}_KRS}_KAPP) =|> State':=29 /\ SRS({APP.RS.{{AccessToken(AS.HyIDP.RS.UName2.A.N8)}_inv(KAS).ID3}_KRS}_KRS)
+
+  4. State=29 /\ RRS({RS.APP.HyIDP.{HyIDP.{PROFILE2(APP,A).N9}_inv(KRS).ID3}_KHyIDP}_KAPP) =|>	State':=31 /\ SHyIDP({APP.HyIDP.{AuthZResp({HyIDP.{PROFILE2(APP,A).N9}_inv(KRS).ID3}_KHyIDP)}_inv(KAPP)}_KHyIDP) /\ witness(APP,HyIDP,hyidp_app_authzresp,AuthZResp)
+end role
+
+role openIDProvider (
+  U,OpenIDP,HyIDP : agent,
+  KU,KOpenIDP,KHyIDP : public_key,
+  RU,SU,RHyIDP,SHyIDP : channel(dy),
+  Resource2,PROFILE1,OpenIDReq, OpenIDResp: message)
+played_by OpenIDP def=        
+  local
+    ID2,UName1,Pass1,LogInURI1 : text,
+    CheckAuthnResponse :bool,
+    State,N2,N3,N4 : nat
+    
+    const u_openidp_n3,hyidp_openidp_n2, u_openidp_uname1, u_openidp_pass1, hyidp_openidp_profile1, hyidp_openidp_checkauthnresponse, hyidp_openidp_n4,u_openidp_resource2 : protocol_id
+                  
+  init 
+   State:=26
+        
+  transition
+
+  1. State=26 /\ RU({U.OpenIDP.{OpenIDReq(ID2.OpenIDP.HyIDP.N2)}_inv(KHyIDP).KHyIDP}_KOpenIDP) =|> State':=28 /\ N3' := new() /\ SU({OpenIDP.U.{Resource2(LogInURI1).N3}_inv(KOpenIDP)}_KU) /\ witness(OpenIDP,u,u_openidp_n3,N3') /\ witness(OpenIDP,U,u_openidp_resource2,Resource2)
+  
+  2. State=28 /\ RU({U.OpenIDP.{UName1.Pass1}_inv(KU).N3}_KOpenIDP) =|> State':=30 /\ SU({OpenIDP.U.HyIDP.{{OpenIDResp(ID2.OpenIDP.HyIDP.PROFILE1(OpenIDP,UName1)).N2}_inv(KOpenIDP)}_KHyIDP}_KU) /\ secret(UName1,u_openidp_secret_uname1,{OpenIDP,U}) /\ secret(Pass1,u_openidp_secret_pass1,{OpenIDP,U}) /\ witness(OpenIDP,HyIDP,hyidp_openidp_profile1,PROFILE1) /\ request(OpenIDP,U,u_openidp_uname1,UName1) /\ request(OpenIDP,U,u_openidp_pass1,Pass1)
+
+  3. State=30 /\ RHyIDP({HyIDP.OpenIDP.{OpenIDResp(ID2.OpenIDP.HyIDP.PROFILE1(OpenIDP,UName1)).N2}_inv(KOpenIDP)}_KOpenIDP) =|> State':=32 /\ N4':=new() /\ CheckAuthnResponse':=new() /\ SHyIDP({OpenIDP.HyIDP.{CheckAuthnResponse'.N4'}_inv(KOpenIDP)}_KHyIDP) /\ witness(OpenIDP,HyIDP,hyidp_openidp_checkauthnresponse,CheckAuthnResponse') /\ witness(OpenIDP,HyIDP,hyidp_openidp_n4,N4')
+end role
+
+
+role authZServer (
+  U,HyIDP,AS,APP,RS : agent,
+  KU,KHyIDP,KAS,KAPP,KRS : public_key,
+  SU,RU,SAPP,RAPP : channel(dy),
+  Resource4,Resource5,AuthZGrant,AccessToken,AuthZReq,SuccessfulAuthN : message)
+played_by AS def=        
+  local
+    ID3,UName2,Pass2,LogInURI2 : text,
+    State,N6,N7,N8 : nat,
+    A : text set
+
+    const u_as_n6,u_as_uname2,u_as_pass2,u_as_authzgrant,u_as_n7,as_rs_accesstoken,as_rs_n8,
+    u_as_secret_authzgrant,u_as_resource5,u_as_resource4,u_as_secret_pass2	: protocol_id
+
+  init 
+    State:=33
+        
+  transition
+
+  1. State=33 /\ RAPP({APP.AS.{AuthZReq(ID3.HyIDP.AS.RS.A)}_inv(KHyIDP).KHyIDP}_KAS) =|> State':=35 /\ N6' := new() /\ SU({AS.U.{Resource4(LogInURI2).N6'}_inv(KAS).ID3}_KU) /\ witness(AS,U,u_as_n6,N6') /\ witness(AS,U,u_as_resource4,Resource4)
+  
+  2. State=35 /\ RU({U.AS.{UName2.Pass2}_inv(KU).N6.ID3}_KAS) =|> State':=37 /\ SU({U.AS.{Resource5(SuccessfulAuthN)}_inv(KAS).ID3.N6}_KU) /\ secret(UName2,u_as_secret_uname2,{U,AS}) /\ secret(Pass2,u_as_secret_pass2,{U,AS}) /\ request(AS,U,u_as_uname2,UName2) /\ request(AS,U,u_as_pass2,Pass2) /\ witness(AS,U,u_as_resource5,Resource5)
+  
+  3. State=37 /\ RAPP({APP.AS.{{AuthZGrant(HyIDP.AS.UName2.A.N7)}_inv(KU)}_KAS.ID3}_KAS) =|> State':=39 /\ N8':=new() /\ SAPP({AS.APP.RS.{{AccessToken(AS.HyIDP.RS.UName2.A.N8)}_inv(KAS).ID3}_KRS}_KAPP) /\ request(AS,U,u_as_authzgrant,AuthZGrant) /\ request(AS,U,u_as_n7,N7) /\ witness(AS,RS,as_rs_accesstoken,AccessToken) /\ witness(AS,RS,as_rs_n8,N8') /\ secret(AuthZGrant,u_as_secret_authzgrant,{AS,U})
+end role
+
+role resourceServer (
+  U,HyIDP,AS,APP,RS : agent,
+  KU,KHyIDP,KAS,KAPP,KRS : public_key,
+  SAPP,RAPP	: channel(dy),
+  AccessToken,PROFILE2 : message)
+played_by RS def=        
+  local
+    State,N8,N9 : nat,
+    ID3,UName2 : text,
+    A : text set
+
+    const as_rs_accesstoken,hyidp_rs_profile2,as_rs_n8 : protocol_id
+                        
+  init
+    State:=34
+        
+   transition
+
+  1. State=34 /\ RAPP({APP.RS.{{AccessToken(AS.HyIDP.RS.UName2.A.N8)}_inv(KAS).ID3}_KRS}_KRS) =|>	State':=36 /\ N9':=new() /\ SAPP({RS.APP.HyIDP.{HyIDP.{PROFILE2(APP,A).N9}_inv(KRS).ID3}_KHyIDP}_KAPP) /\ request(AS,RS,as_rs_accesstoken,AccessToken) /\ secret(AccessToken,as_rs_accesstoken,{AS,RS}) /\ witness(RS,HyIDP,hyidp_rs_profile2,PROFILE2) /\ request(RS,AS,as_rs_n8,N8)
+end role
+
+role session (
+  U,HyIDP,SP,OpenIDP,APP,AS,RS : agent,
+  KU,KHyIDP,KSP,KOpenIDP,KAPP,KAS,KRS,SAMLKHyIDP,SAMLKSP : public_key,
+  Resource1,Resource2,Resource3,Resource4,Resource5,Resource6,Resource7,PROFILE1,PROFILE2,SAMLAssrtn,
+  AuthnReq,SAMLResp,OpenIDReq,OpenIDResp,AuthZReq,AuthZGrant,AuthZResp,AccessToken,SuccessfulAuthN : message)
+def=
+  local SUSP,RUSP,SUHyIDP,RUHyIDP,SUAPP,RUAPP,SUAS,RUAS,SUOpenIDP,RUOpenIDP,SSPU,RSPU,SHyIDPU,RHyIDPU,
+  SHyIDPOpenIDP,RHyIDPOpenIDP,SHyIDPAPP,RHyIDPAPP,SAPPU,RAPPU,SAPPHyIDP,RAPPHyIDP,SAPPAS,RAPPAS,
+  SAPPRS,RAPPRS,SOpenIDPU,ROpenIDPU,SOpenIDPHyIDP,ROpenIDPHyIDP,SASU,RASU,SASAPP,RASAPP,SRSAPP,
+  RRSAPP : channel(dy)
+   
+   composition
+   user(U,HyIDP,SP,OpenIDP,APP,AS,KU,KSP,KHyIDP,SAMLKHyIDP,KOpenIDP,SAMLKSP,KAPP,KAS,SUSP,RUSP,SUHyIDP,
+   RUHyIDP,SUAPP,RUAPP,RUAS,SUAS,SUOpenIDP,RUOpenIDP,Resource1,Resource2,Resource3,Resource4,Resource5,
+   Resource6,Resource7,PROFILE1,PROFILE2,SAMLAssrtn,AuthnReq,SAMLResp,OpenIDReq,OpenIDResp,AuthZReq,
+   AuthZGrant,SuccessfulAuthN) 
+   
+   /\ serviceProvider(U,HyIDP,SP,KU,KHyIDP,KSP,SAMLKSP,SAMLKHyIDP,SSPU,RSPU,Resource7,PROFILE1,
+   PROFILE2,SAMLAssrtn,AuthnReq,SAMLResp)
+   
+   /\ hybridIdentityProvider(U,HyIDP,SP,OpenIDP,APP,AS,RS,KU,KHyIDP,KOpenIDP,KAPP,KAS,KRS,SAMLKSP,
+   SAMLKHyIDP,SHyIDPU,RHyIDPU,SHyIDPOpenIDP,RHyIDPOpenIDP,SHyIDPAPP,RHyIDPAPP,AuthnReq,SAMLResp,
+   Resource1,Resource3,Resource6,PROFILE1,PROFILE2,SAMLAssrtn,AuthZReq,AuthZResp,OpenIDReq,OpenIDResp)
+  
+   /\ application(U,HyIDP,AS,APP,RS,KU,KHyIDP,KAS,KAPP,KRS,SAPPU,RAPPU,SAPPHyIDP,RAPPHyIDP,SAPPAS,
+   RAPPAS,SAPPRS,RAPPRS,AccessToken,AuthZGrant,PROFILE2,AuthZReq,AuthZResp)
+   
+   /\ openIDProvider(U,OpenIDP,HyIDP,KU,KOpenIDP,KHyIDP,ROpenIDPU,SOpenIDPU,ROpenIDPHyIDP,
+   SOpenIDPHyIDP,Resource2,PROFILE1,OpenIDReq,OpenIDResp)
+   
+   /\ authZServer(U,HyIDP,AS,APP,RS,KU,KHyIDP,KAS,KAPP,KRS,SASU,RASU,SASAPP,RASAPP,Resource4,
+   Resource5,AuthZGrant,AccessToken,AuthZReq,SuccessfulAuthN)
+   /\
+   resourceServer (U,HyIDP,AS,APP,RS,KU,KHyIDP,KAS,KAPP,KRS,SRSAPP,RRSAPP,AccessToken,PROFILE2)
+end role
+  
+role enviroment()
+def=
+  const u_as_secret_authzgrant,u_hyidp_secret_n1,u_as_secret_uname2,u_as_secret_pass2,u_openidp_secret_uname1,
+  u_openidp_secret_pass1,u_hyidp_secret_resource3,u_hyidp_secret_resource1,u_openidp_secret_resource2,
+  u_as_secret_resource4,u_as_secret_resource5,u_hyidp_secret_resource6,u_sp_secret_resource7,
+  hyidp_openidp_secret_profile1,hyidp_rs_secret_profile2,hyidp_openidp_secret_checkauthnresponse,
+  sp_hyidp_samlresponse,sp_hyidp_n11,u_hyidp_n10,u_hyidp_resource6,hyidp_app_authzresp,u_openidp_n3,
+  hyidp_openidp_n2,u_openidp_uname1, u_openidp_pass1, hyidp_openidp_profile1,
+  hyidp_openidp_checkauthnresponse, hyidp_openidp_n4,u_openidp_resource2,u_as_n6,u_as_uname2,u_as_pass2,
+  u_as_authzgrant,u_as_n7,as_rs_accesstoken,as_rs_n8,u_as_resource5,u_as_resource4,hyidp_rs_profile2,
+  hyidp_u_resource1,u_hyidp_n5,hyidp_rs_n10,u_sp_resource7,u_sp_n12,u_hyidp_n1,
+  u_hyidp_resource1: protocol_id,      
+  
+  u,hyidp,sp,openidp,app,as,rs : agent,
+  ku,ksp,khyidp,ki,samlkidp,samlksp,kopenidp,kapp,kas,krs   : public_key,
+  
+  resource1,resource2,resource3,resource4,resource5,resource6,resource7,profile1,profile2,
+  samlassrtn,authnreq,samlresp,openidreq,openidresp,authzreq,authzgrant,authzresp,accesstoken,
+  authzresp,successfulauthn  : message
+                                                  
+  intruder_knowledge={u,sp,app,openidp,as,rs,hyidp,ki,inv(ki),ksp,kapp,kopenidp,kas,krs,khyidp}      
+  
+  composition
+  
+  session(u,hyidp,sp,openidp,app,as,rs,ku,khyidp,ksp,kopenidp,kapp,kas,krs,samlkidp,samlksp,
+  resource1,resource2,resource3,resource4,resource5,resource6,resource7,profile1,profile2,
+  samlassrtn,authnreq,samlresp,openidreq,openidresp,authzreq,authzgrant,authzresp,accesstoken,
+  successfulauthn)
+  
+  /\ session(u,hyidp,i,openidp,app,as,rs,ku,khyidp,ki,kopenidp,kapp,kas,krs,samlkidp,samlksp,resource1,
+  resource2,resource3,resource4,resource5,resource6,resource7,profile1,profile2,samlassrtn,authnreq,
+  samlresp,openidreq,openidresp,authzreq,authzgrant,authzresp,accesstoken,successfulauthn)
+  
+  /\ session(i,hyidp,sp,openidp,app,as,rs,ki,khyidp,ksp,kopenidp,kapp,kas,krs,samlkidp,samlksp,
+  resource1,resource2,resource3,resource4,resource5,resource6,resource7,profile1,profile2,
+  samlassrtn,authnreq,samlresp,openidreq,openidresp,authzreq,authzgrant,authzresp,accesstoken,
+  successfulauthn)
+end role
+
+
+goal
+
+secrecy_of u_as_secret_authzgrant
+secrecy_of u_hyidp_secret_n1
+secrecy_of u_as_secret_uname2
+secrecy_of u_as_secret_pass2
+secrecy_of u_openidp_secret_uname1
+secrecy_of u_openidp_secret_pass1
+secrecy_of u_hyidp_secret_resource3
+secrecy_of u_hyidp_secret_resource1
+secrecy_of u_openidp_secret_resource2
+secrecy_of u_as_secret_resource4
+secrecy_of u_as_secret_resource5
+secrecy_of u_hyidp_secret_resource6
+secrecy_of u_sp_secret_resource7
+secrecy_of hyidp_openidp_secret_profile1
+secrecy_of hyidp_rs_secret_profile2
+secrecy_of hyidp_openidp_secret_checkauthnresponse
+
+
+authentication_on sp_hyidp_samlresponse
+authentication_on sp_hyidp_n11
+authentication_on u_hyidp_n10
+authentication_on u_hyidp_resource6
+authentication_on hyidp_app_authzresp
+authentication_on u_openidp_n3
+authentication_on hyidp_openidp_n2
+authentication_on u_openidp_uname1
+authentication_on u_openidp_pass1
+authentication_on hyidp_openidp_profile1
+authentication_on hyidp_openidp_checkauthnresponse
+authentication_on hyidp_openidp_n4
+authentication_on u_openidp_resource2
+authentication_on u_as_n6,u_as_uname2
+authentication_on u_as_pass2
+authentication_on u_as_authzgrant
+authentication_on u_as_n7
+authentication_on as_rs_accesstoken
+authentication_on as_rs_n8
+authentication_on u_as_resource5
+authentication_on u_as_resource4
+authentication_on hyidp_rs_profile2
+authentication_on hyidp_u_resource1
+authentication_on u_hyidp_n5
+authentication_on hyidp_rs_n10
+authentication_on u_sp_resource7
+authentication_on u_sp_n12
+authentication_on u_hyidp_n1
+authentication_on u_hyidp_resource1
+authentication_on hyidp_u_resource3
+end goal
+
+enviroment()

@@ -1,0 +1,66 @@
+%%% DCUS -> AM: {DCUS.AM.Na}_Kb
+%%% AM -> DCUS: {DCUS.AM.Na.AuthToken}_Ka
+
+role role_DCUS(DCUS:agent,AM:agent,Ka:public_key,Kb:public_key,SND,RCV:channel(dy))
+played_by DCUS
+def=
+	local
+		State:nat,Na:text,AuthToken:text
+	init
+		State := 0
+	transition
+		1. State=0 /\ RCV(start) =|> 
+                   State':=1 /\ Na':=new() /\ SND({DCUS.AM.Na'}_Kb)
+
+		2. State=1 /\ RCV({DCUS.AM.Na.AuthToken'}_Ka) =|> 
+                   State':=2 
+                   
+                   %% DCUS checks that he receives the same nonce 
+                   %% that he sent at step 1.
+
+                   /\ request(DCUS,AM,auth_1,Na)
+end role
+
+role role_AM(AM:agent,DCUS:agent,AuthToken:text,Ka:public_key,Kb:public_key,SND,RCV:channel(dy))
+played_by AM
+def=
+	local
+		State:nat,Na:text
+	init
+		State := 0
+	transition
+		1. State=0 /\ RCV({DCUS.AM.Na'}_Kb) =|> 
+                   
+                   State':=1 /\ SND({DCUS.AM.Na'.AuthToken}_Ka)
+
+                   /\ secret(AuthToken,sec_1,{DCUS,AM}) 
+                   %% AM hopes that Na will permit to authenticate him
+                   /\ witness(AM,DCUS,auth_1,Na')
+end role
+
+role session(DCUS:agent,AM:agent,AuthToken:text,Ka:public_key,Kb:public_key)
+def=
+	local
+		SND2,RCV2,SND1,RCV1:channel(dy)
+	composition
+		role_AM(AM,DCUS,AuthToken,Ka,Kb,SND2,RCV2) /\ role_DCUS(DCUS,AM,Ka,Kb,SND1,RCV1)
+end role
+
+role environment()
+def=
+	const
+		ka,kb:public_key,
+                am,university:agent,
+                s1:text,
+                sec_1,auth_1:protocol_id
+	intruder_knowledge = {am,university,ka,kb}
+	composition
+		session(am,university,s1,ka,kb) /\ session(am,university,s1,ka,kb)
+end role
+
+goal
+	secrecy_of sec_1
+        authentication_on auth_1
+end goal
+
+environment()

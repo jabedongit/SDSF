@@ -1,0 +1,60 @@
+%%% AM -> CP: {DCUS.DS.Na}_Kcp
+%%% CP -> AM: {DCUS.DS.Na.CPToken}_Kam
+%%% AM -> CP:  {AM,CP,Nc,CPToken}_Kcp
+%%% CP -> AM:  {AM,CP,Nb,ContextInfo}_Kam
+
+role role_AM(AM:agent,CP:agent,Kam:public_key,Kcp:public_key,SND,RCV:channel(dy))
+played_by AM
+def=
+	local
+		State:nat,Na,Nc:text,CPToken:text,ContextInfo:text
+	 
+	init
+		State := 0
+	transition
+		1. State=0 /\ RCV(start) =|> State':=1 /\ Na':=new() /\ SND({AM.CP.Na'}_Kcp)
+
+		2. State=1 /\ RCV({AM.CP.Na.CPToken'}_Kam) =|> State':=2 /\ Nc':=new() /\ SND ({AM.CP.Nc'.CPToken'}_Kcp) /\ request(CP,AM,auth_1,Na) /\ request(CP,AM,auth_2,CPToken) /\ secret(CPToken,CPToken_Sectet,{AM,CP}) 
+		
+		3. State =2 /\ RCV({AM.CP.Nc.ContextInfo'}_Kam) =|>  State':=3  /\ request(CP,AM,auth_3,CPToken) /\ secret(ContextInfo,ContextInfo_Sectet,{AM,CP}) 
+end role
+
+
+role role_CP(AM:agent,CP:agent,CPToken:text,ContextInfo:text, Kam:public_key,Kcp:public_key,SND,RCV:channel(dy))
+played_by CP
+def=
+	local
+		State:nat,Na:text
+	init
+		State := 0
+	transition
+		1. State=0 /\ RCV({AM.CP.Na'}_Kcp) =|> State':=1 /\ SND({AM.CP.Na.CPToken'}_Kam)   /\ secret(CPToken,CPToken_Sectet,{DCUS,DS}) /\ witness(AM,CP,auth_1,Na')
+		2. State = 1 /\ RCV({AM.CP.Nc.CPToken'}_Kcp) =|> State = 2 /\ SND ({AM.CP.Nc.ContextInfo'}_Kam) /\ secret(ContextInfo,ContextInfo_Sectet,{AM,CP})
+end role
+
+role session(AM:agent,CP:agent,CPToken:text,ContextInfo:text,,Kam:public_key,Kcp:public_key)
+def=
+	local
+		SND2,RCV2,SND1,RCV1:channel(dy)
+	composition
+		role_AM(AM,CP,Kam,Kcp,SND2,RCV2) /\ role_CP(AM,CP,CPToken,ContextInfo,Kam,Kcp,SND1,RCV1)
+end role
+
+role environment()
+def=
+	const
+		kam,kcp:public_key,
+                am,locationProvider:agent,
+                cotext_info,context_token:text,
+                CPToken_Sectet,ContextInfo_Sectet:protocol_id
+	intruder_knowledge = {am,locationProvider,kam,kcp}
+	composition
+		session(am,locationProvider,cotext_info,context_token,kam,kcp) /\ session(am,locationProvider,cotext_info,context_token,kam,kcp)
+end role
+
+goal
+	secrecy_of ContextInfo_Sectet,CPToken_Sectet
+        authentication_on auth_1,auth_2,auth_3
+end goal
+
+environment()
